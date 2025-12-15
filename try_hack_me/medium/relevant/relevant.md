@@ -75,9 +75,10 @@ smb: \> more passwords.txt
 
 ```
 $ echo "Qm9iIC0gIVBAJCRXMHJEITEyMw==" | base64 -d
-Bob - !P@$$W0rD!123                                                                                                                    
+Bob - !P@$$W0rD!123   
+
 $ echo "QmlsbCAtIEp1dzRubmFNNG40MjA2OTY5NjkhJCQk" | base64 -d
-Bill - Juw4nnaM4n420696969!$$$  
+Bill - Juw4nnaM4n420696969!$$$
 ```
 
 I've tried with no success
