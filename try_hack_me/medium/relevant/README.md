@@ -18,6 +18,9 @@ Service detection performed. Please report any incorrect results at https://nmap
 Nmap done: 1 IP address (1 host up) scanned in 16.25 seconds
 ```
 
+Podemos ver que esta rodando um servidor IIS
+
+<figure><img src="1.png" alt=""><figcaption></figcaption></figure>
 
 ```
 $ enum4linux -a 10.66.181.111
