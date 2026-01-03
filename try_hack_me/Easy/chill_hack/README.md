@@ -1,4 +1,4 @@
-# CHILL HACK
+# Chill Hack
 
 #Linux #PHP #PrivEsc #CommandInjection #Docker
 
