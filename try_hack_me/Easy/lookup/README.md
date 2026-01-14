@@ -24,7 +24,7 @@ PORT   STATE SERVICE VERSION
 Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
 ```
 
-I used ffuf 
+I used ffuf, but I didn't find anything interesting.
 
 ```
 $ ffuf -u http://lookup.thm/FUZZ -w /usr/share/wordlists/seclists/Discovery/Web-Content/raft-medium-files.txt 
@@ -49,40 +49,94 @@ ________________________________________________
  :: Matcher          : Response status: 200-299,301,302,307,401,403,405,500
 ________________________________________________
 
-.htaccess               [Status: 403, Size: 275, Words: 20, Lines: 10, Duration: 132ms]
-login.php               [Status: 200, Size: 1, Words: 1, Lines: 2, Duration: 2367ms]
-index.php               [Status: 200, Size: 719, Words: 114, Lines: 27, Duration: 2367ms]
-.                       [Status: 200, Size: 719, Words: 114, Lines: 27, Duration: 133ms]
-styles.css              [Status: 200, Size: 687, Words: 95, Lines: 51, Duration: 133ms]
-.html                   [Status: 403, Size: 275, Words: 20, Lines: 10, Duration: 132ms]
-.php                    [Status: 403, Size: 275, Words: 20, Lines: 10, Duration: 132ms]
-.htpasswd               [Status: 403, Size: 275, Words: 20, Lines: 10, Duration: 132ms]
-.htm                    [Status: 403, Size: 275, Words: 20, Lines: 10, Duration: 132ms]
-.htpasswds              [Status: 403, Size: 275, Words: 20, Lines: 10, Duration: 132ms]
-.htgroup                [Status: 403, Size: 275, Words: 20, Lines: 10, Duration: 132ms]
-wp-forum.phps           [Status: 403, Size: 275, Words: 20, Lines: 10, Duration: 132ms]
-.htaccess.bak           [Status: 403, Size: 275, Words: 20, Lines: 10, Duration: 132ms]
-.htuser                 [Status: 403, Size: 275, Words: 20, Lines: 10, Duration: 132ms]
-.htc                    [Status: 403, Size: 275, Words: 20, Lines: 10, Duration: 132ms]
-.ht                     [Status: 403, Size: 275, Words: 20, Lines: 10, Duration: 132ms]
-:: Progress: [17129/17129] :: Job [1/1] :: 302 req/sec :: Duration: [0:00:59] :: Errors: 0 ::
+.htaccess        [Status: 403, Size: 275, Words: 20, Lines: 10, Duration: 132ms]
+login.php        [Status: 200, Size: 1, Words: 1, Lines: 2, Duration: 237ms]
+index.php        [Status: 200, Size: 719, Words: 114, Lines: 27, Duration: 237ms]
+.                [Status: 200, Size: 719, Words: 114, Lines: 27, Duration: 133ms]
+styles.css       [Status: 200, Size: 687, Words: 95, Lines: 51, Duration: 133ms]
+.html            [Status: 403, Size: 275, Words: 20, Lines: 10, Duration: 132ms]
+.php             [Status: 403, Size: 275, Words: 20, Lines: 10, Duration: 132ms]
+.htpasswd        [Status: 403, Size: 275, Words: 20, Lines: 10, Duration: 132ms]
+.htm             [Status: 403, Size: 275, Words: 20, Lines: 10, Duration: 132ms]
+.htpasswds       [Status: 403, Size: 275, Words: 20, Lines: 10, Duration: 132ms]
+.htgroup         [Status: 403, Size: 275, Words: 20, Lines: 10, Duration: 132ms]
+wp-forum.phps    [Status: 403, Size: 275, Words: 20, Lines: 10, Duration: 132ms]
+.htaccess.bak    [Status: 403, Size: 275, Words: 20, Lines: 10, Duration: 132ms]
+.htuser          [Status: 403, Size: 275, Words: 20, Lines: 10, Duration: 132ms]
+.htc             [Status: 403, Size: 275, Words: 20, Lines: 10, Duration: 132ms]
+.ht              [Status: 403, Size: 275, Words: 20, Lines: 10, Duration: 132ms]
 ```
 
+## Exploiting
 
-<figure><img src="lookup-1.png" alt=""><figcaption></figcaption></figure>
-
+It's necessary to add the IP to hosts file.
 
 ```
 10.66.165.76    lookup.thm
+```
+
+Accessing the main page, I have a login form.
+
+<figure><img src="lookup-1.png" alt=""><figcaption></figcaption></figure>
+
+I tested a few SQL Injection payloads to bypass the authentication but none of them worked. So, I intercepted the request using Burpsuite to test some default users and passwords. 
+
+<figure><img src="lookup-2.png" alt=""><figcaption></figcaption></figure>
+
+I received an "Wrong username or password" message. I knew that if I send a valid username, the application will probably say that only the password is wrong.
+
+<figure><img src="lookup-3.png" alt=""><figcaption></figcaption></figure>
+
+I was able to validate that. I tested `admin` username and now I know that `admin` is a valid username.
+
+Let's try to figure out the password using hydra (or ffuf).
+
+
+<figure><img src="lookup-4.png" alt=""><figcaption></figcaption></figure>
+
+<figure><img src="lookup-5.png" alt=""><figcaption></figcaption></figure>
+
+As we can see, `password123` is a valid password. But when I try to login as `admin` using this password, I can not. The password is probably valid, but not for the `admin` user.
+
+Let's enumerate users with this password.
+
+<figure><img src="lookup-6.png" alt=""><figcaption></figcaption></figure>
+
+<figure><img src="lookup-7.png" alt=""><figcaption></figcaption></figure>
+
+I found a user called `jose`, with the password `password123`, I was able to authenticate myself in the application. I also needed to add the IP to hosts file.
+
+```
 10.66.165.76    files.lookup.thm
 ```
 
+<figure><img src="lookup-8.png" alt=""><figcaption></figcaption></figure>
 
-```
-https://github.com/hadrian3689/elFinder_2.1.47_php_connector_rce
-```
+I tried to upload some PHP files as a webshell bypassing some filters, but none of them worked because the application blocked some file extensions and contents.
+
+<figure><img src="lookup-9.png" alt=""><figcaption></figcaption></figure>
+
+After investigating the software further, I discovered its name and version. I started searching for public exploits and found this one.
+
+{% embed url="https://github.com/hadrian3689/elFinder_2.1.47_php_connector_rce" %}
+
+I was able to get a shell through this exploit.
+
+<figure><img src="lookup-10.png" alt=""><figcaption></figcaption></figure>
+<figure><img src="lookup-11.png" alt=""><figcaption></figcaption></figure>
+
+## Privilege Escalation
+
+First, I did a manual check but I didn't find anything interesting. After that, I ran linpeas script, which indicated that there was a binary `/usr/bin/pwm` running with sudo privileges.
+
+<figure><img src="lookup-12.png" alt=""><figcaption></figcaption></figure>
+
+If I try to run this binary file, I get the following result:
+
+<figure><img src="lookup-13.png" alt=""><figcaption></figcaption></figure>
 
 
+<figure><img src="lookup-14.png" alt=""><figcaption></figcaption></figure>
 
 ```
 echo '#!/bin/bash' > id
