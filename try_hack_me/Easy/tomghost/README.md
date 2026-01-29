@@ -2,8 +2,9 @@
 
 #Linux #Tomcat #CVE-2020-1938 
 
-## Recon
-j
+## Reconnaissance
+
+I started running nmap and I got the result:
 
 ```
 $ nmap -sV -sC 10.66.144.241
@@ -28,12 +29,73 @@ PORT     STATE SERVICE    VERSION
 Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
 ```
 
+## Exploiting
+
+Accessing the main page, we can notice that the application is using `Apache Tomcat 9.0.30`.
+
+<figure><img src="tomghost-1.png" alt=""><figcaption></figcaption></figure>
+
+Searching for exploits, I discover that is vulnerable and has a `CVE-2020-1938`.
+
+{% embed url="https://www.exploit-db.com/exploits/48143"%}
+
+Running this exploit, I was able to read `web.xml` file, which contains an user and password.
+
+<figure><img src="tomghost-2.png" alt=""><figcaption></figcaption></figure>
+
+I can access SSH successfully with skyfuck user.
+
+<figure><img src="tomghost-3.png" alt=""><figcaption></figcaption></figure>
+
+Reading the `user.txt` flag.
+
+<figure><img src="tomghost-4.png" alt=""><figcaption></figcaption></figure>
+
+## Lateral Privilege Escalation
+
+There are two interesting files, `credential.pgp` and `tryhackme.asc`. 
+
+*Pgp is a binary file. It is typically used for encrypted data or signed files in a compact, machine-friendly format.* 
+
+*An .asc file is a plain text file format based on the American Standard Code for Information Interchange (ASCII). Often used to store digital signatures, public keys, or secure messages.*
+
+<figure><img src="tomghost-5.png" alt=""><figcaption></figcaption></figure>
+
+I need to import the `asc` file then decrypt the `.pgp` file, but it require a passphrase, in that case I don't have it.
+
+<figure><img src="tomghost-6.png" alt=""><figcaption></figcaption></figure>
+
+The idea is to try to find that out it. To do that, I sent the files to my local machine using `wget` (I could also use `scp`).
+
+<figure><img src="tomghost-7.png" alt=""><figcaption></figcaption></figure>
+<figure><img src="tomghost-8.png" alt=""><figcaption></figcaption></figure>
+
+I can use `gpg2john` in `.asc` file to modify the content to be able to use `john`. 
+
+<figure><img src="tomghost-9.png" alt=""><figcaption></figcaption></figure>
+
+Since I did that, I was able to find the passphrase.
+
+<figure><img src="tomghost-10.png" alt=""><figcaption></figcaption></figure>
+
+Now I can decrypt it successfully. It contains a password to login as Merlin user.
+
+<figure><img src="tomghost-11.png" alt=""><figcaption></figcaption></figure>
+## Privilege Escalation
+
+Searching for commands that I can run as sudo, I found `/usr/bin/zip` that I can run as sudo with no password.
+
+<figure><img src="tomghost-12.png" alt=""><figcaption></figcaption></figure>
+
+I can spawn a shell as root using this command bellow.
 
 ```
-https://www.exploit-db.com/exploits/48143
+sudo zip anything.zip /etc/hosts -T -TT '/bin/bash #'
 ```
 
+<figure><img src="tomghost-13.png" alt=""><figcaption></figcaption></figure>
 
-```
-skyfuck:8730281lkjlkjdqlksalks
-```
+Done! I was able to get a shell as root.
+
+<figure><img src="tomghost-14.png" alt=""><figcaption></figcaption></figure>
+
