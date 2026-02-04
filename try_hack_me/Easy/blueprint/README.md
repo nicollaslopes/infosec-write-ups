@@ -79,3 +79,10 @@ Host script results:
 |   challenge_response: supported
 |_  message_signing: disabled (dangerous, but default)
 ```
+
+
+https://github.com/nobodyatall648/osCommerce-2.3.4-Remote-Command-Execution
+
+```
+$ python3 -m http.server 4444
+```
