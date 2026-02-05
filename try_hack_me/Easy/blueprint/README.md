@@ -4,6 +4,7 @@
 
 ## Reconnaissance
 
+I started running nmap and I got the result:
 
 ```
 $ nmap -sV -sC 10.66.135.184
@@ -80,9 +81,57 @@ Host script results:
 |_  message_signing: disabled (dangerous, but default)
 ```
 
+By accessing the default port 80, we can see the following page. I searched for directories and files, but didn't find anything interesting.
 
-https://github.com/nobodyatall648/osCommerce-2.3.4-Remote-Command-Execution
+<figure><img src="blueprint-1.png" alt=""><figcaption></figcaption></figure>
+
+Accessing port 8080, we can see that the application is using osCommerce on version `2.3.4`.
+
+<figure><img src="blueprint-2.png" alt=""><figcaption></figcaption></figure>
+
+Searching for public exploits, I found this. I can run a remote command execution.
+
+{% embed url="https://github.com/nobodyatall648/osCommerce-2.3.4-Remote-Command-Execution" %}
+
+Running this exploit, I was able to get a shell.
+
+<figure><img src="blueprint-3.png" alt=""><figcaption></figcaption></figure>
+
+Now I want to upgrade my shell. First, I tried to create a PHP file just to see if it was possible.
+
+<figure><img src="blueprint-4.png" alt=""><figcaption></figcaption></figure>
+<figure><img src="blueprint-5.png" alt=""><figcaption></figcaption></figure>
+
+Since I was able to create a PHP file, I wrote a webshell and I used `certutil` to download my local file.
 
 ```
 $ python3 -m http.server 4444
 ```
+
+<figure><img src="blueprint-6.png" alt=""><figcaption></figcaption></figure>
+
+Done. Now I can run commands in a better way. 
+
+<figure><img src="blueprint-7.png" alt=""><figcaption></figcaption></figure>
+
+## Post-Exploitation
+
+To obtain the NLTM hash, I had to check the architecture to run Mimikatz.
+
+<figure><img src="blueprint-8.png" alt=""><figcaption></figcaption></figure>
+
+After checking, I downloaded mimikatz Win32.
+
+<figure><img src="blueprint-9.png" alt=""><figcaption></figcaption></figure>
+
+Running mimikatz, I was able to obtain the NTLM hash.
+
+<figure><img src="blueprint-10.png" alt=""><figcaption></figcaption></figure>
+
+I was able to decrypt the hash.
+
+<figure><img src="blueprint-11.png" alt=""><figcaption></figcaption></figure>
+
+Since I was already administrator, I was able to read `root.txt.txt` file.
+
+<figure><img src="blueprint-12.png" alt=""><figcaption></figcaption></figure>
