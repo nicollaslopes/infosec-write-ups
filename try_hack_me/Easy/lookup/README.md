@@ -125,18 +125,21 @@ I was able to get a shell through this exploit.
 <figure><img src="lookup-10.png" alt=""><figcaption></figcaption></figure>
 <figure><img src="lookup-11.png" alt=""><figcaption></figcaption></figure>
 
-## Privilege Escalation
-
-First, I did a manual check but I didn't find anything interesting. After that, I ran linpeas script, which indicated that there was a binary `/usr/bin/pwm` running with sudo privileges.
+Checking `home` folder, I was unable to read the `user.txt` flag.
 
 <figure><img src="lookup-12.png" alt=""><figcaption></figcaption></figure>
 
-If I try to run this binary file, I get the following result:
+## Shell as `Think`
+
+First, I did a manual check but I didn't find anything interesting. After that, I ran linpeas script, which indicated that there was a binary `/usr/bin/pwm` running with sudo privileges.
 
 <figure><img src="lookup-13.png" alt=""><figcaption></figcaption></figure>
 
+If I try to run this binary file, I get the following result. This binary checks the user id, and then used to locate the `.password` file of this user in the `home` directory. 
 
 <figure><img src="lookup-14.png" alt=""><figcaption></figcaption></figure>
+
+To bypass it, we can create a simple bash script `id`, that replicate the output of the original `id` command.
 
 ```
 echo '#!/bin/bash' > id
@@ -144,11 +147,45 @@ echo 'echo "uid=1000(think) gid=1000(think) groups=1000(think)"' >> id
 chmod +x id
 ```
 
+<figure><img src="lookup-15.png" alt=""><figcaption></figcaption></figure>
 
+Next, we add `/tmp` to our `PATH` variable so that the binary is looked up first when any binary such as `id` is called.
 
 ```
  export PATH=/tmp:$PATH
 ```
 
+Running `/usr/sbin/pwm`, I got the contents of `.passwords`. 
 
-https://gtfobins.github.io/gtfobins/look/
+<figure><img src="lookup-16.png" alt=""><figcaption></figcaption></figure>
+
+I used hydra again to discover `think` password, and I was able to find it.
+
+<figure><img src="lookup-17.png" alt=""><figcaption></figcaption></figure>
+
+Accessing SSH with `think` user, I was able to read the `user.txt` flag. 
+
+<figure><img src="lookup-18.png" alt=""><figcaption></figcaption></figure>
+<figure><img src="lookup-19.png" alt=""><figcaption></figcaption></figure>
+
+## Privilege Escalation
+
+Checking for possible binaries that I could run as sudo, I found `look`.
+
+<figure><img src="lookup-20.png" alt=""><figcaption></figcaption></figure>
+
+On GTFOBins, we can see that it's possible to take advantage of that to read data from local file.
+
+<figure><img src="lookup-21.png" alt=""><figcaption></figcaption></figure>
+
+I was able to read `/root/.ssh/id_rsa` file, and I got the root's private key to access SSH.
+
+<figure><img src="lookup-22.png" alt=""><figcaption></figcaption></figure>
+
+Using this private key, I can log in as root.
+
+<figure><img src="lookup-23.png" alt=""><figcaption></figcaption></figure>
+
+Reading the `root.txt` flag.
+
+<figure><img src="lookup-24.png" alt=""><figcaption></figcaption></figure>
