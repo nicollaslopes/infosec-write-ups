@@ -178,7 +178,7 @@ On GTFOBins, we can see that it's possible to take advantage of that to read dat
 
 <figure><img src="lookup-21.png" alt=""><figcaption></figcaption></figure>
 
-I was able to read `/root/.ssh/id_rsa` file, and I got the root's private key to access SSH.
+I was able to read `/root/.ssh/id_rsa` file, and I obtained the root's private key to access SSH.
 
 <figure><img src="lookup-22.png" alt=""><figcaption></figcaption></figure>
 
