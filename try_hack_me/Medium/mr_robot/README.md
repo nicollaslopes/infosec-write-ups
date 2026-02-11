@@ -1,7 +1,9 @@
 #Linux #Wordpress #PHP #PrivEsc #WebExploitation 
 # Mr Robot
 
-## Enumeration
+## Reconnaissance
+
+I started running nmap and I got the following result.
 
 ```
 $ nmap -sV -sC 10.65.172.144
@@ -32,6 +34,7 @@ Nmap done: 1 IP address (1 host up) scanned in 30.18 seconds
 
 ```
 
+## Enumeration
 
 ```
 $ ffuf -u http://10.65.172.144/FUZZ -w /usr/share/wordlists/seclists/Discovery/Web-Content/raft-medium-directories.txt
@@ -56,41 +59,45 @@ ________________________________________________
  :: Matcher          : Response status: 200-299,301,302,307,401,403,405,500
 ________________________________________________
 
-images                  [Status: 301, Size: 236, Words: 14, Lines: 8, Duration: 148ms]
-admin                   [Status: 301, Size: 235, Words: 14, Lines: 8, Duration: 148ms]
-wp-content              [Status: 301, Size: 240, Words: 14, Lines: 8, Duration: 148ms]
-wp-includes             [Status: 301, Size: 241, Words: 14, Lines: 8, Duration: 149ms]
-css                     [Status: 301, Size: 233, Words: 14, Lines: 8, Duration: 150ms]
-wp-admin                [Status: 301, Size: 238, Words: 14, Lines: 8, Duration: 151ms]
-js                      [Status: 301, Size: 232, Words: 14, Lines: 8, Duration: 151ms]
-blog                    [Status: 301, Size: 234, Words: 14, Lines: 8, Duration: 147ms]
-login                   [Status: 302, Size: 0, Words: 1, Lines: 1, Duration: 1542ms]
-feed                    [Status: 301, Size: 0, Words: 1, Lines: 1, Duration: 442ms]
-xmlrpc                  [Status: 405, Size: 42, Words: 6, Lines: 1, Duration: 1736ms]
-rss                     [Status: 301, Size: 0, Words: 1, Lines: 1, Duration: 408ms]
-video                   [Status: 301, Size: 235, Words: 14, Lines: 8, Duration: 148ms]
-sitemap                 [Status: 200, Size: 0, Words: 1, Lines: 1, Duration: 147ms]
-image                   [Status: 301, Size: 0, Words: 1, Lines: 1, Duration: 390ms]
-audio                   [Status: 301, Size: 235, Words: 14, Lines: 8, Duration: 147ms]
-phpmyadmin              [Status: 403, Size: 94, Words: 14, Lines: 1, Duration: 146ms]
-dashboard               [Status: 302, Size: 0, Words: 1, Lines: 1, Duration: 389ms]
-wp-login                [Status: 200, Size: 2613, Words: 115, Lines: 53, Duration: 420ms]
-0                       [Status: 301, Size: 0, Words: 1, Lines: 1, Duration: 410ms]
-atom                    [Status: 301, Size: 0, Words: 1, Lines: 1, Duration: 407ms]
-robots                  [Status: 200, Size: 41, Words: 2, Lines: 4, Duration: 148ms]
-license                 [Status: 200, Size: 309, Words: 25, Lines: 157, Duration: 271ms]
-intro                   [Status: 200, Size: 516314, Words: 2076, Lines: 2028, Duration: 154ms]
-Image                   [Status: 301, Size: 0, Words: 1, Lines: 1, Duration: 410ms]
-IMAGE                   [Status: 301, Size: 0, Words: 1, Lines: 1, Duration: 374ms]
-rss2                    [Status: 301, Size: 0, Words: 1, Lines: 1, Duration: 396ms]
-readme                  [Status: 200, Size: 64, Words: 14, Lines: 2, Duration: 148ms]
-rdf                     [Status: 301, Size: 0, Words: 1, Lines: 1, Duration: 386ms]
-0000                    [Status: 301, Size: 0, Words: 1, Lines: 1, Duration: 386ms]
-wp-config               [Status: 200, Size: 0, Words: 1, Lines: 1, Duration: 438ms]
-page1                   [Status: 301, Size: 0, Words: 1, Lines: 1, Duration: 433ms]
-
+images          [Status: 301, Size: 236, Words: 14, Lines: 8, Duration: 148ms]
+admin           [Status: 301, Size: 235, Words: 14, Lines: 8, Duration: 148ms]
+wp-content      [Status: 301, Size: 240, Words: 14, Lines: 8, Duration: 148ms]
+wp-includes     [Status: 301, Size: 241, Words: 14, Lines: 8, Duration: 149ms]
+css             [Status: 301, Size: 233, Words: 14, Lines: 8, Duration: 150ms]
+wp-admin        [Status: 301, Size: 238, Words: 14, Lines: 8, Duration: 151ms]
+js              [Status: 301, Size: 232, Words: 14, Lines: 8, Duration: 151ms]
+blog            [Status: 301, Size: 234, Words: 14, Lines: 8, Duration: 147ms]
+login           [Status: 302, Size: 0, Words: 1, Lines: 1, Duration: 1542ms]
+feed            [Status: 301, Size: 0, Words: 1, Lines: 1, Duration: 442ms]
+xmlrpc          [Status: 405, Size: 42, Words: 6, Lines: 1, Duration: 1736ms]
+rss             [Status: 301, Size: 0, Words: 1, Lines: 1, Duration: 408ms]
+video           [Status: 301, Size: 235, Words: 14, Lines: 8, Duration: 148ms]
+sitemap         [Status: 200, Size: 0, Words: 1, Lines: 1, Duration: 147ms]
+image           [Status: 301, Size: 0, Words: 1, Lines: 1, Duration: 390ms]
+audio           [Status: 301, Size: 235, Words: 14, Lines: 8, Duration: 147ms]
+phpmyadmin      [Status: 403, Size: 94, Words: 14, Lines: 1, Duration: 146ms]
+dashboard       [Status: 302, Size: 0, Words: 1, Lines: 1, Duration: 389ms]
+wp-login        [Status: 200, Size: 2613, Words: 115, Lines: 53, Duration: 420ms]
+atom            [Status: 301, Size: 0, Words: 1, Lines: 1, Duration: 407ms]
+robots          [Status: 200, Size: 41, Words: 2, Lines: 4, Duration: 148ms]
+license         [Status: 200, Size: 309, Words: 25, Lines: 157, Duration: 271ms]
+intro         [Status: 200, Size: 5163, Words: 9076, Lines: 228, Duration: 154ms]
+Image         [Status: 301, Size: 0, Words: 1, Lines: 1, Duration: 410ms]
+IMAGE         [Status: 301, Size: 0, Words: 1, Lines: 1, Duration: 374ms]
+rss2          [Status: 301, Size: 0, Words: 1, Lines: 1, Duration: 396ms]
+readme        [Status: 200, Size: 64, Words: 14, Lines: 2, Duration: 148ms]
+rdf           [Status: 301, Size: 0, Words: 1, Lines: 1, Duration: 386ms]
+0000          [Status: 301, Size: 0, Words: 1, Lines: 1, Duration: 386ms]
+wp-config     [Status: 200, Size: 0, Words: 1, Lines: 1, Duration: 438ms]
+page1         [Status: 301, Size: 0, Words: 1, Lines: 1, Duration: 433ms]
 ```
 
+On `robots` page,
+
+<figure><img src="mr-robot-1.png" alt=""><figcaption></figcaption></figure>
+
+
+<figure><img src="mr-robot-2.png" alt=""><figcaption></figcaption></figure>
 
 ```
 http://10.65.172.144/fsocity.dic
