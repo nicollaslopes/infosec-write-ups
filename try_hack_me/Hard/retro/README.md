@@ -1,7 +1,10 @@
 # Retro
 
 #Windows #CVE-2019-1388 #Wordpress 
-## Recon
+
+## Reconnaissance
+
+I started running nmap and I got the following result.
 
 ```
 $ nmap -sV -Pn 10.64.140.140
@@ -18,6 +21,11 @@ Service detection performed. Please report any incorrect results at https://nmap
 Nmap done: 1 IP address (1 host up) scanned in 18.63 seconds
 ```
 
+Accessing on port 80, we can see this default page.
+
+<figure><img src="retro-1.png" alt=""><figcaption></figcaption></figure>
+
+Searching for directories, I found `retro`.
 
 ```
 $ ffuf -u http://10.64.140.140/FUZZ -w /usr/share/wordlists/seclists/Discovery/Web-Content/raft-large-directories.txt 
@@ -45,55 +53,65 @@ ________________________________________________
 retro                   [Status: 301, Size: 150, Words: 9, Lines: 2, Duration: 296ms]
 ```
 
-```
-$ ffuf -u http://10.64.140.140/retro/FUZZ -w /usr/share/wordlists/seclists/Discovery/Web-Content/raft-large-files.txt
+What a beautiful retro blog!
 
-        /'___\  /'___\           /'___\       
-       /\ \__/ /\ \__/  __  __  /\ \__/       
-       \ \ ,__\\ \ ,__\/\ \/\ \ \ \ ,__\      
-        \ \ \_/ \ \ \_/\ \ \_\ \ \ \ \_/      
-         \ \_\   \ \_\  \ \____/  \ \_\       
-          \/_/    \/_/   \/___/    \/_/       
+<figure><img src="retro-2.png" alt=""><figcaption></figcaption></figure>
 
-       v2.1.0-dev
-________________________________________________
+I noticed that is using `Wordpress v5.2.1`.
 
- :: Method           : GET
- :: URL              : http://10.64.140.140/retro/FUZZ
- :: Wordlist         : FUZZ: /usr/share/wordlists/seclists/Discovery/Web-Content/raft-large-files.txt
- :: Follow redirects : false
- :: Calibration      : false
- :: Timeout          : 10
- :: Threads          : 40
- :: Matcher          : Response status: 200-299,301,302,307,401,403,405,500
-________________________________________________
+<figure><img src="retro-3.png" alt=""><figcaption></figcaption></figure>
 
-LICENSE.txt             [Status: 200, Size: 19935, Words: 3334, Lines: 386, Duration: 270ms]
-readme.html             [Status: 200, Size: 7447, Words: 761, Lines: 99, Duration: 128ms]
-license.txt             [Status: 200, Size: 19935, Words: 3334, Lines: 386, Duration: 129ms]
-index.php               [Status: 301, Size: 0, Words: 1, Lines: 1, Duration: 1409ms]
-wp-login.php            [Status: 200, Size: 2743, Words: 152, Lines: 69, Duration: 1569ms]
-xmlrpc.php              [Status: 405, Size: 42, Words: 6, Lines: 1, Duration: 1778ms]
-wp-config.php           [Status: 200, Size: 0, Words: 1, Lines: 1, Duration: 1391ms]
-wp-trackback.php        [Status: 200, Size: 135, Words: 11, Lines: 5, Duration: 1463ms]
-wp-settings.php         [Status: 500, Size: 0, Words: 1, Lines: 1, Duration: 624ms]
-.                       [Status: 200, Size: 30515, Words: 2531, Lines: 546, Duration: 1346ms]
-wp-mail.php             [Status: 403, Size: 2759, Words: 220, Lines: 123, Duration: 1479ms]
-wp-cron.php             [Status: 200, Size: 0, Words: 1, Lines: 1, Duration: 1648ms]
-wp-blog-header.php      [Status: 200, Size: 0, Words: 1, Lines: 1, Duration: 1342ms]
-wp-links-opml.php       [Status: 200, Size: 229, Words: 13, Lines: 12, Duration: 1444ms]
-wp-load.php             [Status: 200, Size: 0, Words: 1, Lines: 1, Duration: 1325ms]
-wp-signup.php           [Status: 302, Size: 0, Words: 1, Lines: 1, Duration: 1328ms]
-wp-activate.php         [Status: 302, Size: 0, Words: 1, Lines: 1, Duration: 1356ms]
-README.html             [Status: 200, Size: 7447, Words: 761, Lines: 99, Duration: 129ms]
-Index.php               [Status: 301, Size: 0, Words: 1, Lines: 1, Duration: 1323ms]
-LICENSE.TXT             [Status: 200, Size: 19935, Words: 3334, Lines: 386, Duration: 127ms]
-License.txt             [Status: 200, Size: 19935, Words: 3334, Lines: 386, Duration: 127ms]
-index.Php               [Status: 301, Size: 0, Words: 1, Lines: 1, Duration: 1333ms]
-:: Progress: [37050/37050] :: Job [1/1] :: 311 req/sec :: Duration: [0:02:03] :: Errors: 0 ::
-```
+Looking through the blog, I found a possible user `Wade`. We can validate it by trying to use this user. As we can see, this is a valid user.
 
+<figure><img src="retro-4.png" alt=""><figcaption></figcaption></figure>
 
-```
-https://sotharo-meas.medium.com/cve-2019-1388-windows-privilege-escalation-through-uac-22693fa23f5f
-```
+Performing a brute-force attack on `Wade` password, I can find a password `parzival`. 
+
+<figure><img src="retro-6.png" alt=""><figcaption></figcaption></figure>
+
+I was able to login successfully into Wordpress, although this will not be necessary from now on.
+
+<figure><img src="retro-7.png" alt=""><figcaption></figcaption></figure>
+
+## Privilege Escalation
+
+Since the port `3389` is open, I can try to access remotely using `xfreerdp`.
+
+<figure><img src="retro-8.png" alt=""><figcaption></figcaption></figure>
+
+I notice a file `hhupd` on recycle bin.
+
+<figure><img src="retro-9.png" alt=""><figcaption></figcaption></figure>
+
+I search about this file and I found a `CVE-2019-1388`. Following this article, I can exploit it to escalate the privilege.
+
+{% embed url="https://sotharo-meas.medium.com/cve-2019-1388-windows-privilege-escalation-through-uac-22693fa23f5f" %}
+
+When running this file, you must click on "Show more details".
+
+Step 1
+<figure><img src="retro-10.png" alt=""><figcaption></figcaption></figure>
+
+Step 2
+<figure><img src="retro-11.png" alt=""><figcaption></figcaption></figure>
+
+Step 3
+<figure><img src="retro-12.png" alt=""><figcaption></figcaption></figure>
+
+Step 4
+<figure><img src="retro-13.png" alt=""><figcaption></figcaption></figure>
+
+Step 5
+<figure><img src="retro-14.png" alt=""><figcaption></figcaption></figure>
+
+Step 6
+<figure><img src="retro-15.png" alt=""><figcaption></figcaption></figure>
+
+Step 7
+<figure><img src="retro-16.png" alt=""><figcaption></figcaption></figure>
+
+After all theses steps, I am now administrator of this system.
+<figure><img src="retro-17.png" alt=""><figcaption></figcaption></figure>
+
+Reading the `root.txt.txt` flag.
+<figure><img src="retro-18.png" alt=""><figcaption></figcaption></figure>
