@@ -1,6 +1,6 @@
 # UltraTech
 
-
+#Linux #Docker #PrivEsc #nodejs #CommandInjection 
 ## Reconnaissance
 
 I started running nmap and I got the following result:
