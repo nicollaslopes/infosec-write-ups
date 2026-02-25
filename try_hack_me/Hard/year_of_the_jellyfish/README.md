@@ -1,7 +1,7 @@
 # Year of the Jellyfish
 
 
-## Reconnaissance
+## Reconnaissance 
 
 ```
 $ nmap -p- -sV -sC 10.64.95.248
