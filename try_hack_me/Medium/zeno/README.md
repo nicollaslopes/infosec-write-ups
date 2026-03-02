@@ -1,7 +1,6 @@
 # Zeno
 
-#Linux 
-
+#Linux #PrivEsc 
 ## Reconnaissance
 
 I started running nmap and I got the following result.
