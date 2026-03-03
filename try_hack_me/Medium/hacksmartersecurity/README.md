@@ -1,6 +1,6 @@
 # Hacksmartersecurity
 
-#Windows 
+#Windows #DellOpenManage #PrivEsc #Spoofer 
 ## Reconnaissance
 
 I started running nmap and I got this following result.
