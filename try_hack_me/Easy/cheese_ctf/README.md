@@ -51,7 +51,7 @@ Obviously, the first port I tried was 80. As we can see, it's a website.
 Fuzzing for files I found `messages.html`. 
 
 ```
-ffuf -u http://10.65.129.106/FUZZ -w /usr/share/wordlists/seclists/Discovery/Web-Content/raft-medium-files.txt 
+$ ffuf -u http://10.65.129.106/FUZZ -w /usr/share/wordlists/seclists/Discovery/Web-Content/raft-medium-files.txt 
 
         /'___\  /'___\           /'___\       
        /\ \__/ /\ \__/  __  __  /\ \__/       
@@ -93,7 +93,7 @@ orders.html     [Status: 200, Size: 380, Words: 61, Lines: 19, Duration: 127ms]
 messages.html   [Status: 200, Size: 448, Words: 59, Lines: 19, Duration: 128ms]
 ```
 
- 
+ Accessing the `messages.html` file and clicking on the link, we got this page:
 
 <figure><img src="cheese-ctf-2.png" alt=""><figcaption></figcaption></figure>
 <figure><img src="cheese-ctf-3.png" alt=""><figcaption></figcaption></figure>
@@ -241,8 +241,26 @@ Also I noticed that we have permission to edit `exploit.timer` file, that's inte
 
 <figure><img src="cheese-ctf-14.png" alt=""><figcaption></figcaption></figure>
 
+I modified the `exploit.timer` file to execute after 3 seconds.
 
+<figure><img src="cheese-ctf-15.png" alt=""><figcaption></figcaption></figure>
 
-```bash
-comte@ip-10-65-183-20:/etc/systemd/system$ echo "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCgduUG+SJrSVvo/7J/CKxrdjKCj9/dyjVfi065XjbY2Fq/Q/2Fju47MhRv5HC6gYwQnDQiv2ICbrxx/889lr/8SQoL4e03kqBDZJ9UEu9oixtuYDME01tZChj7wWxPomn1QtaLKNJ94wU+LdI+8rVRBDNQ4FFSXYZ29Sw13Iah3wZDdT0ZqKLHisdUwknUD2P21jqRJLI/dgXwo63q+zxdsU4PP8oikwPYPt8IvrIHtjPuwjjVDT7DUb0oTKgNprSyiSHXwqF24LZxtG7oAFMoKtGwgV1GylZyvqt0wX87aJmy+4QFKtfWq67T/mftFSN3yQSNXzMgJOb3JYL4qzNM4syTgmNLxCiLGinNCez0+hNyiLuIZH9jkaqFooxSAkqyMbAG8Pv/j5iowgPYZlM6wJykB5kQwsLfWtrqvuOD/+iR9l8Yg2YuEb+srMRuKeamkWzYV3FxQNukxaG/jQUFq0Ixe/H1fk5gjj4qsd1Fly7wSImb9vUCDK4tf6wBBaU= user@kali" | /opt/xxd | /opt/xxd -r - /root/.ssh/authorized_keys
-```
+Then I ran `sudo /bin/systemctl start exploit.timer` and we can see that it a file named `xxd` was created.
+
+<figure><img src="cheese-ctf-16.png" alt=""><figcaption></figcaption></figure>
+
+As we can see, I can abuse the SUID bit set in `xxd` command.
+
+<figure><img src="cheese-ctf-17.png" alt=""><figcaption></figcaption></figure>
+
+Running this command below, I was able to copy my public key to /root/.ssh/authorized_keys, to login as root.
+
+<figure><img src="cheese-ctf-18.png" alt=""><figcaption></figcaption></figure>
+
+Since I managed to do that, I can login successfully!
+
+<figure><img src="cheese-ctf-19.png" alt=""><figcaption></figcaption></figure>
+
+Reading the `root.txt` flag.
+
+<figure><img src="cheese-ctf-20.png" alt=""><figcaption></figcaption></figure>

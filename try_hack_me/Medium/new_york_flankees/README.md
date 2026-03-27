@@ -1,5 +1,7 @@
 # New York Flankees
 
+## Reconnaissance
+
 ```
 $ nmap -sV -Pn 10.64.132.243
 Starting Nmap 7.98 ( https://nmap.org ) at 2026-01-21 05:13 -0500
@@ -14,6 +16,8 @@ Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
 Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
 Nmap done: 1 IP address (1 host up) scanned in 10.89 seconds
 ```
+
+## Enumeration
 
 ```
 $ ffuf -u http://10.64.132.243:8080/FUZZ -w /usr/share/wordlists/seclists/Discovery/Web-Content/raft-medium-files.txt 

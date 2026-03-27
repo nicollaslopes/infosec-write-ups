@@ -1,6 +1,6 @@
 # Boiler CTF
 
-#Linux #Joomla 
+#Linux #PrivEsc  #Joomla 
 
 ## Reconnaissance
 
@@ -172,7 +172,6 @@ Trying to access the user's folder, I didn't have permission to do that.
 
 <figure><img src="boiler-ctf-7.png" alt=""><figcaption></figcaption></figure>
 
-<figure><img src="boiler-ctf-14.png" alt=""><figcaption></figcaption></figure>
 ## Privilege Escalation
 
 Running Linpeas script, I found a SUID `find`.
@@ -191,15 +190,10 @@ Reading `root.txt` flag.
 
 <figure><img src="boiler-ctf-11.png" alt=""><figcaption></figcaption></figure>
 
-
+Since I was root, I was able to find the first flag (I used SSH to login as root to improve the shell).
 
 <figure><img src="boiler-ctf-12.png" alt=""><figcaption></figcaption></figure>
 
+Reading first flag `.secret` on `stoner` folder.
+
 <figure><img src="boiler-ctf-13.png" alt=""><figcaption></figcaption></figure>
-
-<figure><img src="boiler-ctf-14.png" alt=""><figcaption></figcaption></figure>
-
-```
-# echo 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEAE9Kdo/0MkPinKACi27ZOF2vPaP4t/mWrs/pEgA8E3 user@kali' > authorized_keys
-
-```

